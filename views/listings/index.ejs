@@ -1,0 +1,67 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-4">
+
+    <!-- Heading + Create Button -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>All Listings</h3>
+
+        <a href="/listings/new" class="btn btn-dark">
+            Create New Listing
+        </a>
+    </div>
+
+    <!-- Listings -->
+    <div class="row row-cols-lg-3 row-cols-md-2 row-cols-1 g-4">
+
+        <% for (let listing of allListings) { %>
+
+            <div class="col">
+
+                <a
+                    href="/listings/<%= listing._id %>"
+                    class="listing-link"
+                >
+
+                    <div class="card listing-card h-100">
+
+                        <!-- Listing Image -->
+                        <img
+                            src="<%= listing.image %>"
+                            class="card-img-top"
+                            alt="listing image"
+                            style="height: 250px; object-fit: cover;"
+                        >
+
+                        <!-- Listing Details -->
+                        <div class="card-body">
+
+                            <h5 class="card-title">
+                                <%= listing.title %>
+                            </h5>
+
+                            <p class="card-text">
+                                <%= listing.location %>,
+                                <%= listing.country %>
+                            </p>
+
+                            <p class="card-text">
+                                <b>
+                                    ₹ <%= listing.price.toLocaleString("en-IN") %>
+                                </b>
+                                / night
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </a>
+
+            </div>
+
+        <% } %>
+
+    </div>
+
+</div>
