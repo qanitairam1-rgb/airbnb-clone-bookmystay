@@ -5,7 +5,10 @@ const ExpressError = require("../utils/ExpressError.js");
 const { reviewSchema } = require("../schema.js");
 const Review = require("../models/review.js");
 const Listing = require("../models/listing.js");
-const { isLoggedIn } = require("../middleware.js");
+const { isLoggedIn, isReviewAuthor } = require("../middleware.js");
+const { uploadReviewMedia } = require("../utils/multerConfig.js");
+const fs = require("fs");
+const path = require("path");
 
 const validateReview = (req, res, next) => {
   let { error } = reviewSchema.validate(req.body);
@@ -18,10 +21,18 @@ const validateReview = (req, res, next) => {
   }
 };
 
+// Helper to map uploaded files to the review media format
+const mapFilesToMedia = (files) =>
+  files.map((file) => ({
+    url: `/uploads/reviews/${file.filename}`,
+    filename: file.filename,
+  }));
+
 // Post Reviews Route
 router.post(
     "/",
     isLoggedIn,
+    uploadReviewMedia,
     validateReview,
     wrapAsync(async (req, res) => {
 
@@ -30,6 +41,16 @@ router.post(
         let review = new Review(req.body.review);
 
         review.author = req.user._id;
+
+        // Attach uploaded images (if any)
+        if (req.files && req.files.images && req.files.images.length > 0) {
+            review.images = mapFilesToMedia(req.files.images);
+        }
+
+        // Attach uploaded videos (if any)
+        if (req.files && req.files.videos && req.files.videos.length > 0) {
+            review.videos = mapFilesToMedia(req.files.videos);
+        }
 
         await review.save();
 
@@ -42,47 +63,48 @@ router.post(
         res.redirect(`/listings/${listing._id}`);
     })
 );
-// router.post(
-//   "/",
-//   validateReview,
-//   wrapAsync(async (req, res) => {
-//     let listing = await Listing.findById(req.params.id);
-//     let newReview = new Review(req.body.review);
-
-//     listing.reviews.push(newReview);
-
-//     await newReview.save();
-//     await listing.save();
-
-//     req.flash("success", "New Review Created!");
-//     res.redirect(`/listings/${listing._id}`);
-//   })
-// );
 
 //Delete Review Route
-// router.delete(
-//   "/:reviewId",
-//   wrapAsync(async (req, res) => {
-//     let { id, reviewId } = req.params;
+router.delete(
+  "/:reviewId",
+  isLoggedIn,
+  isReviewAuthor,
+  wrapAsync(async (req, res) => {
+    let { id, reviewId } = req.params;
 
-//     await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
-//     await Review.findById(reviewId);
+    // Remove any uploaded media files from disk before deleting the review
+    const review = await Review.findById(reviewId);
+    if (review) {
+      const mediaFiles = [
+        ...(review.images || []),
+        ...(review.videos || []),
+      ];
+      mediaFiles.forEach((media) => {
+        if (media && media.filename) {
+          const filePath = path.join(
+            __dirname,
+            "..",
+            "public",
+            "uploads",
+            "reviews",
+            media.filename
+          );
+          fs.promises.unlink(filePath).catch(() => {
+            // Ignore errors if the file is already gone
+          });
+        }
+      });
+    }
 
-//     req.flash("success", "Review Deleted!");
-//     res.redirect(`/listings/${id}`);
-//   })
-// );
-router.delete("/:reviewId", wrapAsync(async (req, res) => {
-  let { id, reviewId } = req.params;
+    await Listing.findByIdAndUpdate(id, {
+      $pull: { reviews: reviewId },
+    });
 
-  await Listing.findByIdAndUpdate(id, {
-    $pull: { reviews: reviewId }
-  });
+    await Review.findByIdAndDelete(reviewId);
 
-  await Review.findByIdAndDelete(reviewId);
-
-  req.flash("success", "Review Deleted!");
-  res.redirect(`/listings/${id}`);
-}));
+    req.flash("success", "Review Deleted!");
+    res.redirect(`/listings/${id}`);
+  })
+);
 
 module.exports = router;

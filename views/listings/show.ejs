@@ -91,9 +91,14 @@
 
     <h4>Leave a Review</h4>
 
+    <!--
+      The form must use multipart/form-data so that
+      image and video files can be uploaded along with the review.
+    -->
     <form
       action="/listings/<%= listing._id %>/reviews"
       method="POST"
+      enctype="multipart/form-data"
       novalidate
       class="needs-validation"
     >
@@ -137,6 +142,48 @@
 
       </div>
 
+      <div class="mb-3 mt-3">
+
+        <label for="images" class="form-label">
+          Add Images (optional, up to 5)
+        </label>
+
+        <input
+          type="file"
+          name="images"
+          id="images"
+          class="form-control"
+          accept="image/*"
+          multiple
+        />
+
+        <div class="form-text">
+          You can upload photos of your stay (jpeg, png, gif, webp).
+        </div>
+
+      </div>
+
+      <div class="mb-3 mt-3">
+
+        <label for="videos" class="form-label">
+          Add Videos (optional, up to 2)
+        </label>
+
+        <input
+          type="file"
+          name="videos"
+          id="videos"
+          class="form-control"
+          accept="video/*"
+          multiple
+        />
+
+        <div class="form-text">
+          You can upload short videos of your stay (mp4, webm, ogg, mov).
+        </div>
+
+      </div>
+
       <button class="btn btn-outline-dark">
         Submit
       </button>
@@ -160,7 +207,7 @@
           <div class="card-body">
 
             <h5 class="card-title">
-              Qanita Iram
+              <%= review.author ? review.author.username : "Unknown" %>
             </h5>
 
             <p class="card-text">
@@ -171,6 +218,44 @@
               <%= review.rating %>
               <b>Stars</b>
             </p>
+
+            <!-- Review Images -->
+            <% if(review.images && review.images.length > 0){ %>
+
+              <div class="review-media">
+
+                <% for(let image of review.images){ %>
+
+                  <img
+                    src="<%= image.url %>"
+                    alt="Review Image"
+                    class="review-img"
+                  />
+
+                <% } %>
+
+              </div>
+
+            <% } %>
+
+            <!-- Review Videos -->
+            <% if(review.videos && review.videos.length > 0){ %>
+
+              <div class="review-media">
+
+                <% for(let video of review.videos){ %>
+
+                  <video
+                    src="<%= video.url %>"
+                    controls
+                    class="review-video"
+                  ></video>
+
+                <% } %>
+
+              </div>
+
+            <% } %>
 
             <form
               action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE"

@@ -118,3 +118,27 @@ body {
   padding-left: 0;
   padding-right: 0;
 }
+
+/* Review Media (images & videos) */
+.review-media {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.review-img {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid #ebebeb;
+}
+
+.review-video {
+  width: 100%;
+  max-height: 220px;
+  border-radius: 0.5rem;
+  border: 1px solid #ebebeb;
+  background-color: #000;
+}

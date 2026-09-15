@@ -17,27 +17,29 @@ const reviewSchema = new Schema({
 
     createdAt: {
         type: Date,
-        default: Date.now(),
+        default: Date.now,
     },
 
+    // Images uploaded by the user as part of their review
+    images: [
+        {
+            url: String,
+            filename: String,
+        },
+    ],
 
-// const reviewSchema = new Schema({
-//   comment: String,
-//   rating: {
-//     type: Number,
-//     min: 1,
-//     max: 5,
-//   },
-//   createdAt: {
-//     type: Date,
-//     default: Date.now(),
-//   },
+    // Videos uploaded by the user as part of their review
+    videos: [
+        {
+            url: String,
+            filename: String,
+        },
+    ],
 
-  listing: {
+    listing: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Listing"
-    }
-    
+        ref: "Listing",
+    },
 });
 
 module.exports = mongoose.model("Review", reviewSchema);

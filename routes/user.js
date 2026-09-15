@@ -11,16 +11,21 @@ router.get("/signup", (req, res) => {
 
 router.post(
   "/signup",
-  wrapAsync(async (req, res) => {
+  wrapAsync(async (req, res, next) => {
     try {
       let { username, email, password } = req.body;
       const newUser = new User({ username, email });
       const registeredUser = await User.register(newUser, password);
-      console.log(registeredUser);
-      req.flash("success", "Welcome to wanderlust");
-      res.redirect("/listings");
+
+      req.login(registeredUser, (err) => {
+        if (err) {
+          return next(err);
+        }
+        req.flash("success", "Welcome to wanderlust");
+        res.redirect("/listings");
+      });
     } catch (err) {
-      console.log(err.message);
+      req.flash("error", err.message);
       res.redirect("/signup");
     }
   })
